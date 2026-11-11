@@ -101,7 +101,19 @@ function Smartphone({ hostId }: { hostId: string }) {
   )
 }
 
-function VideoPanel({ stream }: { stream: MediaStream }) {
+function VideoPanel({
+  stream,
+  effects,
+}: {
+  stream: MediaStream
+  effects: {
+    id: number
+    peerId: string
+    text: string
+    x: number
+    y: number
+  }[]
+}) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -120,6 +132,18 @@ function VideoPanel({ stream }: { stream: MediaStream }) {
         muted
         className="w-full rounded bg-black"
       />
+      {effects.map((effect) => (
+        <span
+          key={effect.id}
+          className="pointer-events-none absolute animate-[floatUp_1s_ease-out_forwards] text-xs font-black text-white"
+          style={{
+            left: `${effect.x}%`,
+            bottom: `${effect.y}%`,
+          }}
+        >
+          {effect.text}
+        </span>
+      ))}
     </div>
   )
 }
@@ -128,6 +152,9 @@ function App() {
   const [peerId, setPeerId] = useState('')
   const [videos, setVideos] = useState<
     { peerId: string; stream: MediaStream }[]
+  >([])
+  const [effects, setEffects] = useState<
+    { id: number; peerId: string; text: string; x: number; y: number }[]
   >([])
   const smartphoneUrl = `${window.location.origin}${import.meta.env.BASE_URL}?host=${peerId}`
 
@@ -140,7 +167,16 @@ function App() {
 
     peer.on('connection', (conn) => {
       conn.on('data', (data) => {
-        console.log(conn.peer, data)
+          setEffects((prev) => [
+          ...prev,
+          {
+            id: Date.now() + Math.random(),
+            peerId: conn.peer,
+            text: String(data),
+            x: 30 + Math.random() * 40,
+            y: 10 + Math.random() * 20,
+          },
+        ])
       })
     })
 
@@ -215,6 +251,7 @@ function App() {
           <VideoPanel
             key={video.stream.id}
             stream={video.stream}
+            effects={effects.filter((effect) => effect.peerId === video.peerId)}
           />
         ))}
       </div>
