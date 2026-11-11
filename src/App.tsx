@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 
 function Smartphone({ hostId }: { hostId: string }) {
   const connRef = useRef<DataConnection | null>(null)
+  const [message, setMessage] = useState('ドン！')
   const videoRef = useRef<HTMLVideoElement>(null)
 
     useEffect(() => {
@@ -64,7 +65,14 @@ function Smartphone({ hostId }: { hostId: string }) {
   }, [hostId])
 
     return (
-    <div className="h-dvh overflow-hidden bg-blue-100 p-4">
+     <div
+      onClick={() => {
+        if (connRef.current && connRef.current.open) {
+          connRef.current.send(message)
+        }
+      }}
+      className="h-dvh overflow-hidden bg-blue-100 p-4"
+    >
       <div className="flex flex-row items-center gap-4">
         <h1 className="mb-4 text-sm font-bold">
           スマホカメラ
@@ -73,6 +81,14 @@ function Smartphone({ hostId }: { hostId: string }) {
           接続先PC：{hostId}
         </p>
       </div>
+
+      <input
+        type="text"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className="mb-4 rounded border bg-white p-2"
+        placeholder="送信する文字"
+      />
 
       <video
         ref={videoRef}
