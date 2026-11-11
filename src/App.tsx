@@ -87,7 +87,6 @@ function Smartphone({ hostId }: { hostId: string }) {
 
 function VideoPanel({ stream }: { stream: MediaStream }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const connRef = useRef<DataConnection | null>(null)
 
   useEffect(() => {
     if (videoRef.current) {
