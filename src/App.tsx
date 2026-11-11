@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import Peer from 'peerjs'
+import Peer, { type DataConnection } from 'peerjs'
 import { QRCodeSVG } from 'qrcode.react'
 
 function Smartphone({ hostId }: { hostId: string }) {
+  const connRef = useRef<DataConnection | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
     useEffect(() => {
@@ -12,6 +13,17 @@ function Smartphone({ hostId }: { hostId: string }) {
     function tryCall() {
       if (peer.open && stream) {
         peer.call(hostId, stream)
+
+        const conn = peer.connect(hostId)
+        conn.on('open', () => {
+          connRef.current = conn
+          conn.send('接続完了!')
+        })
+        conn.on('close', () => {
+          if (connRef.current == conn) {
+            connRef.current = null
+          }
+        })
       }
     }
 
@@ -46,6 +58,7 @@ function Smartphone({ hostId }: { hostId: string }) {
     return () => {
       stream?.getTracks().forEach((track) => track.stop())
       stream = null
+      connRef.current = null
       peer.destroy()
     }
   }, [hostId])
@@ -74,6 +87,7 @@ function Smartphone({ hostId }: { hostId: string }) {
 
 function VideoPanel({ stream }: { stream: MediaStream }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const connRef = useRef<DataConnection | null>(null)
 
   useEffect(() => {
     if (videoRef.current) {
@@ -107,6 +121,12 @@ function App() {
 
     peer.on('open', (id) => {
       setPeerId(id)
+    })
+
+    peer.on('connection', (conn) => {
+      conn.on('data', (data) => {
+        console.log(conn.peer, data)
+      })
     })
 
     peer.on('call', (call) => {
